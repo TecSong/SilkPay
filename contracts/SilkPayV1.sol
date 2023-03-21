@@ -12,13 +12,16 @@ pragma solidity ^0.8.7;
 import "./Arbitrator.sol";
 // import "./Arbitrable.sol";
 import "./PaymentUtils.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 
-contract SilkPay {
+contract SilkPayV1 is Pausable {
     // **************************** //
     // *    Contract variables    * //
     // **************************** //
 
+    address public owner;
     uint16 constant MIN_LOCK_TIME = 7200;
+    uint256 public gracePeriod;
     Arbitrator public arbitrator;
 
     PaymentUtils.Payment[] payments;
@@ -34,11 +37,28 @@ contract SilkPay {
     );
 
     event RecipientSpecify(uint256 indexed PaymentID, address indexed recipient);
+    event PayFinished(uint256 indexed PaymentID, address indexed sender, address indexed recipient, uint256 amount);
 
     constructor (
-        Arbitrator _arbitrator
+        Arbitrator _arbitrator,
+        uint256 _gracePeriod
     ) {
         arbitrator = _arbitrator;
+        gracePeriod = _gracePeriod;
+        owner = msg.sender;
+    }
+
+    modifier onlyOwner {
+        require(msg.sender == owner);
+        _;
+    }
+
+    function pause() public onlyOwner {
+        _pause();
+    }
+
+    function unpause() public onlyOwner {
+        _unpause();
     }
 
     function createPayment(
@@ -47,7 +67,7 @@ contract SilkPay {
         address recipient,
         bytes32 merkleTreeRoot
 
-    ) public payable returns (uint256 PaymentID) {
+    ) public payable whenNotPaused returns (uint256 PaymentID) {
         require(lockTime >= MIN_LOCK_TIME, "lock time should greater or equal to 7200 seconds");
         require(msg.value > 0);
         payments.push(PaymentUtils.Payment(
@@ -72,7 +92,7 @@ contract SilkPay {
      * 
      */
     function verifyRecipient(uint256 PaymentID, bytes32[] memory proof, address recipient) public view returns (bool) {
-        bytes32 leafHash = keccak256(abi.encode(recipient));
+        bytes32 leafHash = keccak256(abi.encodePacked(recipient));
         PaymentUtils.Payment storage payment = payments[PaymentID];
         return verifyProof(proof, leafHash) == payment.merkleTreeRoot;
     }
@@ -92,14 +112,27 @@ contract SilkPay {
 
     function specifyRecipient(uint256 PaymentID, bytes32[] memory proof, address recipient) public {
         PaymentUtils.Payment storage payment = payments[PaymentID];
-        require(block.timestamp <= payment.startTime + payment.lockTime, "payment is not within the lock-up period");
-        //验证指定的recipient是否在merkletree中
+        require(msg.sender == payment.sender, "caller is not the sender of payment");
+        require(block.timestamp <= payment.startTime + payment.lockTime, "not in the lock-up period");
         require(verifyRecipient(PaymentID, proof, recipient), "recipient is not included in the payment");
 
         payment.targeted = true;
         payment.recipient = recipient;
 
         emit RecipientSpecify(PaymentID, recipient);
+    }
+
+    function pay(uint256 PaymentID) public whenNotPaused {
+        PaymentUtils.Payment storage payment = payments[PaymentID];
+        require(msg.sender == payment.sender, "caller is not the sender of payment");
+        require(block.timestamp <= payment.startTime + payment.lockTime, "not in the lock-up period");
+        require(payment.targeted == true, "no recipient specified");
+
+        uint256 amount = payment.amount;
+        payment.status = PaymentUtils.PaymentStatus.Paid;
+        payment.amount = 0;
+        payable(payment.recipient).transfer(amount);
+        emit PayFinished(PaymentID, msg.sender, payment.recipient, amount);
     }
 
 }
