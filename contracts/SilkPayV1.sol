@@ -112,7 +112,7 @@ contract SilkPayV1 is Pausable {
 
     function specifyRecipient(uint256 PaymentID, bytes32[] memory proof, address recipient) public {
         PaymentUtils.Payment storage payment = payments[PaymentID];
-        require(msg.sender == payment.sender, "caller is not the sender of payment");
+        require(msg.sender == payment.sender, "The caller must be the sender");
         require(block.timestamp <= payment.startTime + payment.lockTime, "not in the lock-up period");
         require(verifyRecipient(PaymentID, proof, recipient), "recipient is not included in the payment");
 
@@ -124,7 +124,7 @@ contract SilkPayV1 is Pausable {
 
     function pay(uint256 PaymentID) public whenNotPaused {
         PaymentUtils.Payment storage payment = payments[PaymentID];
-        require(msg.sender == payment.sender, "caller is not the sender of payment");
+        require(msg.sender == payment.sender, "The caller must be the sender");
         require(block.timestamp <= payment.startTime + payment.lockTime, "not in the lock-up period");
         require(payment.targeted == true, "no recipient specified");
 
@@ -133,6 +133,35 @@ contract SilkPayV1 is Pausable {
         payment.amount = 0;
         payable(payment.recipient).transfer(amount);
         emit PayFinished(PaymentID, msg.sender, payment.recipient, amount);
+    }
+
+    function raiseDispute(uint256 PaymentID) public payable {
+        PaymentUtils.Payment storage payment = payments[PaymentID];
+        require(payment.status == PaymentUtils.PaymentStatus.Locking);
+        uint256 borderline = payment.startTime + payment.lockTime;
+        require(block.timestamp > borderline && block.timestamp < (borderline + gracePeriod));
+
+        //TODO
+    }
+
+    function getPaymentIDsBySender(address _sender) public view returns (uint256[] memory) {
+        uint count = 0;
+        for (uint256 i=0; i < payments.length; i++) {
+            if (payments[i].sender == _sender) {
+                count++;
+            }
+        }
+
+        uint256[] memory paymentIDs = new uint256[](count);
+        count = 0;
+
+        for (uint j = 0; j < payments.length; j++) {
+            if (payments[j].sender == _sender) {
+                paymentIDs[count++] = j;
+            }     
+        }
+
+        return paymentIDs;
     }
 
 }
