@@ -1,6 +1,7 @@
 # Basic Information
 - Project name：SilkPay
 - Front-end code repository: https://github.com/beyond009/Silkpay
+- UI：https://www.figma.com/file/KYf1yhHUwGXesWfVydZRnN/Untitled?node-id=0%3A1&t=DvvCCVDBkymoAsvO-1
 
 # Project Description
 An arbitrable payment protocol on L2
