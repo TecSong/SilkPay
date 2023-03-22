@@ -1,11 +1,3 @@
- /**
- *  @authors: [@epiqueras]
- *  @reviewers: [@remedcu]
- *  @auditors: []
- *  @bounties: []
- *  @deployments: []
- */
-
 pragma solidity ^0.8.7;
 
 import "./Arbitrator.sol";

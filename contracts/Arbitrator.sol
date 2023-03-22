@@ -1,11 +1,3 @@
- /**
- *  @authors: [@clesaege]
- *  @reviewers: [@remedcu]
- *  @auditors: []
- *  @bounties: []
- *  @deployments: []
- */
-
 pragma solidity ^0.8.7;
 
 import "./Arbitrable.sol";
@@ -55,7 +47,7 @@ abstract contract Arbitrator {
      *  @param _extraData Can be used to give additional info on the dispute to be created.
      *  @return disputeID ID of the dispute created.
      */
-    function createDispute(uint _choices, bytes calldata _extraData) public requireArbitrationFee(_extraData) payable returns(uint disputeID) {}
+    function createDispute(uint _choices, bytes calldata _extraData) public virtual requireArbitrationFee(_extraData) payable returns(uint disputeID) {}
 
     /** @dev Compute the cost of arbitration. It is recommended not to increase it often, as it can be highly time and gas consuming for the arbitrated contracts to cope with fee augmentation.
      *  @param _extraData Can be used to give additional info on the dispute to be created.
@@ -67,7 +59,7 @@ abstract contract Arbitrator {
      *  @param _disputeID ID of the dispute to be appealed.
      *  @param _extraData Can be used to give extra info on the appeal.
      */
-    function appeal(uint _disputeID, bytes calldata _extraData) public requireAppealFee(_disputeID,_extraData) payable {
+    function appeal(uint _disputeID, bytes calldata _extraData) public virtual requireAppealFee(_disputeID,_extraData) payable {
         emit AppealDecision(_disputeID, Arbitrable(msg.sender));
     }
 
@@ -79,7 +71,7 @@ abstract contract Arbitrator {
     function appealCost(uint _disputeID, bytes calldata _extraData) public view virtual returns(uint fee);
 
 
-    function appealPeriod(uint _disputeID) public view returns(uint start, uint end) {}
+    function appealPeriod(uint _disputeID) public view virtual returns(uint start, uint end) {}
 
     /** @dev Return the status of a dispute.
      *  @param _disputeID ID of the dispute to rule.

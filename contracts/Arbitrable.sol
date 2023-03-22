@@ -1,10 +1,3 @@
- /**
- *  @authors: [@clesaege]
- *  @reviewers: [@remedcu]
- *  @auditors: []
- *  @bounties: []
- *  @deployments: []
- */
 
 pragma solidity ^0.8.7;
 
