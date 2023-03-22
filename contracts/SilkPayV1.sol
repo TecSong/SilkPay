@@ -49,7 +49,7 @@ contract SilkPayV1 is Pausable {
         owner = msg.sender;
     }
 
-    modifier onlyOwner {
+    modifier onlyOwner() {
         require(msg.sender == owner);
         _;
     }
