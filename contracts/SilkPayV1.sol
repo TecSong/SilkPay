@@ -82,10 +82,10 @@ contract SilkPayV1 is Pausable {
     ) public payable whenNotPaused returns (uint256 PaymentID) {
         if (targeted) {
             require(recipient != address(0));
-            require(merkleTreeRoot == 0x0000000000000000000000000000000000000000000000000000000000000000);
+            require(merkleTreeRoot == bytes32(0x00));
         } else {
             require(recipient == address(0));
-            require(merkleTreeRoot != 0x0000000000000000000000000000000000000000000000000000000000000000);
+            require(merkleTreeRoot != bytes32(0x00));
         }
         require(lockTime >= MIN_LOCK_TIME, "lock time should greater or equal to 7200 seconds");
         require(msg.value > 0, "amount should not be zero");
@@ -133,6 +133,7 @@ contract SilkPayV1 is Pausable {
 
     function pay(uint256 PaymentID) public whenNotPaused {
         PaymentUtils.Payment storage payment = payments[PaymentID];
+        require(payment.status == PaymentUtils.PaymentStatus.Locking);
         require(msg.sender == payment.sender, "The caller must be the sender");
         require(block.timestamp <= payment.startTime + payment.lockTime, "not in the lock-up period");
         require(payment.targeted == true, "no recipient specified");
