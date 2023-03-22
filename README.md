@@ -7,7 +7,7 @@
 An arbitrable payment protocol on L2
 
 # Vision and Mission
-Primarily, SilkPay aims at bringing faster arbitration solutions to L2, during which, we used different types of L2 platforms, integrated advance payment, arbitration protocols and ZK protocols all to our service, to make better user experience.
+SilkPay is a payment protocol on L2, which aims to solve problems in various payment scenarios on the basis of low cost and high efficiency, such as prepayment, regular payment, credit payment, etc. We have introduced an arbitration mechanism to resolve payment disputes, and we will also use zk technology to protect privacy during payment and arbitration in the future
 
 # Advantages
 - Uniqueness: 
