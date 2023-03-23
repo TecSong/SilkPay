@@ -5,6 +5,8 @@
 
 # Project Description
 An arbitrable payment protocol on L2
+![image](https://user-images.githubusercontent.com/8627464/227238947-879c85e1-a48b-4860-81a1-06d217943a5a.png)
+
 
 # Vision and Mission
 SilkPay is a payment protocol on L2, which aims to solve problems in various payment scenarios on the basis of low cost and high efficiency, such as prepayment, regular payment, credit payment, etc. We have introduced an arbitration mechanism to resolve payment disputes, and we will also use zk technology to protect privacy during payment and arbitration in the future
