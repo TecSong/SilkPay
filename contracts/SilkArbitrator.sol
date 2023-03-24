@@ -58,22 +58,12 @@ contract SilkArbitrator is Arbitrator {
         timesPerPeriod = _timesPerPeriod;
         owner = msg.sender;
 
-        // padding
-        Vote[] memory padding_votes = new Vote[](0);
-        disputes.push(
-            Dispute({
-                arbitrated: Arbitrable(msg.sender),
-                numberOfChoices: 0,
-                period: Period.evidence,
-                lastPeriodChange: 0,
-                votes: padding_votes,
-                totalFeesForJurors: 0,
-                fees: 0,
-                ruling: 0,
-                status: DisputeStatus.Waiting,
-                ruled: false
-            })
-        );
+        // padding 
+        Dispute storage dispute = disputes[0];
+        dispute.arbitrated = Arbitrable(msg.sender);
+        dispute.period = Period.evidence;
+        dispute.votes[0].account = address(0);
+        dispute.status = DisputeStatus.Waiting;
     }
 
     modifier onlyOwner() {
