@@ -82,8 +82,21 @@ contract SilkArbitrator is Arbitrator {
         arbitrationFeeRatio = _arbitrationFeeRatio;
     }
 
-    function createDispute(uint _choices, bytes calldata _extraData) public override payable returns(uint disputeID) {
-        // TODO
+    function getArbtrationFee(uint amount) public view override returns (uint256) {
+        return amount * arbitrationFeeRatio / PERCENTAGE_BASE;
+    }
+
+    function createDispute(uint _numberOfChoices) public override payable returns(uint disputeID) {
+        disputeID = disputes.length;
+        Dispute storage dispute = disputes[disputeID];
+        dispute.arbitrated = Arbitrable(msg.sender);
+        dispute.numberOfChoices = _numberOfChoices;
+        dispute.period = Period.evidence;
+        dispute.lastPeriodChange = block.timestamp;
+        // As many votes that can be afforded by the provided funds.
+        // DisputeId2VoteCounter[dispute.voteCounters.length++].tied = true; // TODO
+
+        emit DisputeCreation(disputeID, Arbitrable(msg.sender));
     }
 
     function currentRuling(uint _disputeID) public view override returns(uint ruling){

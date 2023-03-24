@@ -21,6 +21,7 @@ contract SilkPayV1 is Pausable {
     // *    Contract variables    * //
     // **************************** //
 
+    uint8 constant AMOUNT_OF_CHOICES = 2;
     uint8 constant SENDER_WINS = 1;
     uint8 constant RECIPIENT_WINS = 2;
     uint16 constant public MIN_LOCK_TIME = 7200;
@@ -48,6 +49,7 @@ contract SilkPayV1 is Pausable {
     event PayFinished(uint256 indexed PaymentID, address indexed sender, address indexed recipient, uint256 amount);
     event ReFund(uint256 indexed PaymentID, address indexed sender, uint256 amount);
     event Evidence(address indexed arbitrator, uint256 indexed PaymentID, address indexed submitter, string _evidence);
+    event Dispute(address indexed arbitrator, uint256 indexed dispute_id, uint256 indexed PaymentID);
 
     constructor (
         Arbitrator _arbitrator,
@@ -154,16 +156,19 @@ contract SilkPayV1 is Pausable {
      * @dev called when sender specified the recipient
      * @param PaymentID payment id
      */
-    function raiseDisputeByRecipient(uint256 PaymentID) public payable whenNotPaused {
+    function raiseDisputeByRecipient(uint256 PaymentID) public payable whenNotPaused returns (uint256 dispute_id) {
         PaymentUtils.Payment storage payment = payments[PaymentID];
         require(payment.targeted && msg.sender == payment.recipient);
         require(payment.status == PaymentUtils.PaymentStatus.Locking);
         uint256 borderline = payment.startTime + payment.lockTime;
         require(block.timestamp > borderline && block.timestamp <= (borderline + gracePeriod));
 
-        //TODO
-        // arbitrab fee logic
-        // emit DisputeCreated();
+        uint256 _arbitrationCost = arbitrator.getArbtrationFee(payment.amount);
+        require(msg.value >= _arbitrationCost, "arbitration fee is not enough");
+        dispute_id = arbitrator.createDispute{value: _arbitrationCost}(AMOUNT_OF_CHOICES);
+
+        disputeIDtoPaymentId[dispute_id] = PaymentID;
+        emit Dispute(address(arbitrator), dispute_id, PaymentID);
     }
 
     /**

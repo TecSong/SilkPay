@@ -35,10 +35,9 @@ abstract contract Arbitrator {
     /** @dev Create a dispute. Must be called by the arbitrable contract.
      *  Must be paid at least arbitrationCost(_extraData).
      *  @param _choices Amount of choices the arbitrator can make in this dispute.
-     *  @param _extraData Can be used to give additional info on the dispute to be created.
      *  @return disputeID ID of the dispute created.
      */
-    function createDispute(uint _choices, bytes calldata _extraData) public virtual payable returns(uint disputeID) {}
+    function createDispute(uint _choices) public virtual payable returns(uint disputeID) {}
 
     /** @dev Return the status of a dispute.
      *  @param _disputeID ID of the dispute to rule.
@@ -51,4 +50,6 @@ abstract contract Arbitrator {
      *  @return ruling The ruling which has been given or the one which will be given if there is no appeal.
      */
     function currentRuling(uint _disputeID) public view virtual returns(uint ruling);
+
+    function getArbtrationFee(uint amount) public view virtual returns (uint256);
 }
