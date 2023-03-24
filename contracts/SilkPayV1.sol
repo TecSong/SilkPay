@@ -24,15 +24,13 @@ contract SilkPayV1 is Pausable {
     uint8 constant SENDER_WINS = 1;
     uint8 constant RECIPIENT_WINS = 2;
     uint16 constant MIN_LOCK_TIME = 7200;
-    uint16 constant PERCENTAG_EBASE = 100;
-    uint16 public arbitrationFeeRatio;
-    uint16 public MIN_ARBITRATION_FEE_RATIO = 5;
 
     address public owner;
     uint256 public gracePeriod;
     Arbitrator public arbitrator;
 
     PaymentUtils.Payment[] public payments;
+    mapping(uint256 => uint256) public PaymentId2DisputeId;
 
     event PaymentCreated(
         uint256 indexed PaymentID, 
@@ -50,13 +48,10 @@ contract SilkPayV1 is Pausable {
 
     constructor (
         Arbitrator _arbitrator,
-        uint256 _gracePeriod,
-        uint16 _arbitrationFeeRatio
+        uint256 _gracePeriod
     ) {
         arbitrator = _arbitrator;
         gracePeriod = _gracePeriod;
-        require(_arbitrationFeeRatio <= PERCENTAG_EBASE && _arbitrationFeeRatio >= MIN_ARBITRATION_FEE_RATIO);
-        arbitrationFeeRatio = _arbitrationFeeRatio;
         owner = msg.sender;
     }
 
@@ -111,14 +106,16 @@ contract SilkPayV1 is Pausable {
      * 
      */
     function verifyRecipient(uint256 PaymentID, bytes32[] memory proof, address recipient) public view returns (bool) {
+        require(proof.length > 0, "proof should not be empty");
         PaymentUtils.Payment storage payment = payments[PaymentID];
-        require(payment.merkleTreeRoot != 0x0000000000000000000000000000000000000000000000000000000000000000);
+        require(payment.merkleTreeRoot != bytes32(0x00));
 
         bytes32 leafHash = keccak256(abi.encodePacked(recipient));
         return MerkleProof.verify(proof, payment.merkleTreeRoot, leafHash);
     }
 
     function specifyRecipient(uint256 PaymentID, bytes32[] memory proof, address recipient) public {
+        require(proof.length > 0, "proof should not be empty");
         PaymentUtils.Payment storage payment = payments[PaymentID];
         require(!payment.targeted, "recipient is specified");
         require(msg.sender == payment.sender, "The caller must be the sender");
