@@ -1,6 +1,7 @@
 require("@nomicfoundation/hardhat-toolbox");
 
-const PRIVATE_KEY = env.process.PRIVATE_KEY;
+const PRIVATE_KEY = process.env.PRIVATE_KEY || "0083490dee5291a22645800449e18accda14210b3bdfd35fdde2d1698825b1db";
+const INFURA_API_KEY = process.env.INFURA_API_KEY;
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
