@@ -255,6 +255,11 @@ contract SilkPayV1 is Pausable {
         settleFee(payment, _ruling);
     }
 
+    /**
+     * @dev settle payment fee after ruling
+     * @param payment the payment 
+     * @param _ruling the ruling of disupte
+     */
     function settleFee(PaymentUtils.Payment storage payment, uint256 _ruling) internal {
         require(_ruling == SENDER_WINS || _ruling == RECIPIENT_WINS);
         if (_ruling == SENDER_WINS) {
@@ -275,6 +280,9 @@ contract SilkPayV1 is Pausable {
         
     }
 
+    /**
+     * @dev refund to the sender of the payment
+     */
     function refund(uint256 PaymentID) public whenNotPaused {
         PaymentUtils.Payment storage payment = payments[PaymentID];
         require(msg.sender == payment.sender);
