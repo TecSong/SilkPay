@@ -26,9 +26,9 @@ SilkPay is a payment protocol on L2, which aims to solve problems in various pay
 - ![flow](https://user-images.githubusercontent.com/8627464/227718733-1b894dd0-63bc-4fc1-97e6-15350faa4e5b.jpg)
 
 # Application Scenario
-- payments in DAOs
-- payments in hackathons
-- so on
+- payments in DAOs, such as the payment of remuneration
+- payments in hackathons, such as designating the winner among the contestants and paying out the prize money
+- and so on
 
 # Functions completed during hackathon delivery
 - [ ] **Complete the logic of prepayment**
