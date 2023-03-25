@@ -23,7 +23,8 @@ SilkPay is a payment protocol on L2, which aims to solve problems in various pay
   - We set the payment amount and whitelist receivers ahead of time before the payment is triggered, to prevent loss of funds.
 
 # How it works
-- TODO
+- ![flow](https://user-images.githubusercontent.com/8627464/227718733-1b894dd0-63bc-4fc1-97e6-15350faa4e5b.jpg)
+
 # Application Scenario
 - payments in DAOs
 - payments in hackathons
