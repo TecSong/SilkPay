@@ -1,15 +1,13 @@
 const hre = require("hardhat");
 
 async function main() {
-  const lockedAmount = hre.ethers.utils.parseEther("1");
-
   const Arbitrator = await hre.ethers.getContractFactory("SilkArbitrator");
-  const arbitrator = await Arbitrator.deploy(15, { value: lockedAmount });
+  const arbitrator = await Arbitrator.deploy(15, [1,2,3]);
 
   await arbitrator.deployed();
 
   console.log(
-    `Lock with 1 ETH and unlock timestamp ${unlockTime} deployed to ${lock.address}`
+    `Arbitrator with 15% fee deployed to ${arbitrator.address}`
   );
 }
 
