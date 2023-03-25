@@ -52,7 +52,7 @@ contract SilkArbitrator is Arbitrator {
 
     constructor (
         uint16 _arbitrationFeeRatio,
-        uint256[3] memory _timesPerPeriod
+        uint256[4] memory _timesPerPeriod
     ) {
         require(_arbitrationFeeRatio <= PERCENTAGE_BASE && _arbitrationFeeRatio >= MIN_ARBITRATION_FEE_RATIO);
         arbitrationFeeRatio = _arbitrationFeeRatio;
@@ -98,7 +98,23 @@ contract SilkArbitrator is Arbitrator {
         emit DisputeCreation(disputeID, Arbitrable(msg.sender));
     }
 
-        /** @dev Sets the caller's choices for the specified vote.
+    /** @dev Sets the caller's commit for the specified vote.
+     *  @param _disputeID The ID of the dispute.
+     *  @param _commit The commit.
+     */
+    function Commit(uint _disputeID, bytes32 _commit) external onlyDuringPeriod(_disputeID, Period.commit) returns (uint voteID){
+        Dispute storage dispute = disputes[_disputeID];
+        require(_commit != bytes32(0));
+        for (uint i=0;i<dispute.votes.length;i++) {
+            require(msg.sender != dispute.votes[i].account, "alread committed");
+        }
+        dispute.votes.push(
+            Vote({commit:_commit, account: msg.sender, choice: 0, voted: false})
+        );
+        voteID = dispute.votes.length - 1;
+    }
+
+    /** @dev Sets the caller's choices for the specified vote.
      *  @param _disputeID The ID of the dispute.
      *  @param _voteID The ID of the vote.
      *  @param _choice The choice.
@@ -203,7 +219,7 @@ contract SilkArbitrator is Arbitrator {
         Dispute storage dispute = disputes[_disputeID];
         if (dispute.period == Period.evidence) {
             require(
-                dispute.votes.length > 1 || block.timestamp - dispute.lastPeriodChange >= timesPerPeriod[uint(dispute.period)],
+                block.timestamp - dispute.lastPeriodChange >= timesPerPeriod[uint(dispute.period)],
                 "The evidence period time has not passed yet and it is not an appeal."
             );
             dispute.period = Period.commit;
