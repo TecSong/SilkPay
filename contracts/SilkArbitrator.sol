@@ -40,7 +40,8 @@ contract SilkArbitrator is Arbitrator {
         bool ruled; // True if the ruling has been executed, false otherwise.
     }
 
-    Dispute[] public disputes;
+    uint public disputeCount;
+    mapping (uint => Dispute) public disputes;
     mapping(uint => VoteCounter) public DisputeId2VoteCounter;
 
     address public owner;
@@ -60,6 +61,7 @@ contract SilkArbitrator is Arbitrator {
         owner = msg.sender;
 
         // padding 
+
         Dispute storage dispute = disputes[0];
         dispute.arbitrated = Arbitrable(msg.sender);
         dispute.period = Period.evidence;
@@ -76,6 +78,7 @@ contract SilkArbitrator is Arbitrator {
     }
 
     event NewPeriod(uint indexed _disputeID, Period _period);
+    event ExecuteRuling(uint indexed _disputeID, uint winningChoice);
     
     function setFeeRatio(uint16 _arbitrationFeeRatio) external onlyOwner {
         require(_arbitrationFeeRatio <= PERCENTAGE_BASE && _arbitrationFeeRatio >= MIN_ARBITRATION_FEE_RATIO);
@@ -87,13 +90,15 @@ contract SilkArbitrator is Arbitrator {
     }
 
     function createDispute(uint _numberOfChoices) public override payable returns(uint disputeID) {
-        disputeID = disputes.length;
+        disputeID = disputeCount;
         Dispute storage dispute = disputes[disputeID];
         dispute.arbitrated = Arbitrable(msg.sender);
         dispute.numberOfChoices = _numberOfChoices;
         dispute.period = Period.evidence;
         dispute.fees = msg.value;
         dispute.lastPeriodChange = block.timestamp;
+
+        disputeCount++;
 
         emit DisputeCreation(disputeID, Arbitrable(msg.sender));
     }
@@ -162,6 +167,8 @@ contract SilkArbitrator is Arbitrator {
         uint winningCount = vote_counter.counts[winningChoice];
         dispute.arbitrated.rule(_disputeID, winningChoice);
         settleArbitrationFee(dispute, winningCount, winningChoice);
+
+        emit ExecuteRuling(_disputeID, winningChoice);
     }
 
     /** @dev Settlement of arbitration fees to the winning juror.
@@ -184,7 +191,7 @@ contract SilkArbitrator is Arbitrator {
      *  @return ruling The current ruling.
      */
     function currentRuling(uint _disputeID) public view override returns(uint ruling){
-        require(_disputeID>0 && _disputeID <= disputes.length);
+        require(_disputeID <= disputeCount);
         VoteCounter storage vote_counter = DisputeId2VoteCounter[_disputeID];
         ruling = vote_counter.tied ? 0 : vote_counter.winningChoice;
     }

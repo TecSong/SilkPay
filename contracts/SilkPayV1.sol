@@ -52,6 +52,7 @@ contract SilkPayV1 is Pausable {
     event Refund(uint256 indexed PaymentID, address indexed sender, uint256 amount);
     event Evidence(address indexed arbitrator, uint256 indexed PaymentID, address indexed submitter, string _evidence);
     event Dispute(address indexed arbitrator, uint256 indexed dispute_id, uint256 indexed PaymentID);
+    event SettleFee(address sender, uint senderFee, address recipient, uint recipientFee);
 
     constructor (
         Arbitrator _arbitrator,
@@ -89,7 +90,7 @@ contract SilkPayV1 is Pausable {
             require(recipient == address(0));
             require(merkleTreeRoot != ZEROBYTES32);
         }
-        require(lockTime >= MIN_LOCK_TIME, "lock time should greater or equal to 7200 seconds");
+        // require(lockTime >= MIN_LOCK_TIME, "lock time should greater or equal to 7200 seconds");
         require(msg.value > 0, "amount should not be zero");
         payments.push(PaymentUtils.Payment(
             uint8(PaymentUtils.PaymentType.PrePay),
@@ -155,13 +156,14 @@ contract SilkPayV1 is Pausable {
     }
 
     function _raiseDispute(PaymentUtils.Payment storage payment) internal returns (uint256) {
-        require(payment.status == PaymentUtils.PaymentStatus.Locking);
+        require(payment.status == PaymentUtils.PaymentStatus.Locking, "status should be locking");
         uint256 borderline = payment.startTime + payment.lockTime;
-        require(block.timestamp > borderline && block.timestamp <= (borderline + gracePeriod));
+        require(block.timestamp > borderline && block.timestamp <= (borderline + gracePeriod), "not during grace period");
 
         uint256 _arbitrationCost = arbitrator.getArbtrationFee(payment.amount);
         require(msg.value >= _arbitrationCost, "arbitration fee is not enough");
         uint256 dispute_id = arbitrator.createDispute{value: _arbitrationCost}(AMOUNT_OF_CHOICES);
+        payment.status = PaymentUtils.PaymentStatus.Appealing;
         return dispute_id;
     } 
 
@@ -257,16 +259,20 @@ contract SilkPayV1 is Pausable {
         require(_ruling == SENDER_WINS || _ruling == RECIPIENT_WINS);
         if (_ruling == SENDER_WINS) {
             payable(payment.sender).transfer(payment.amount);
+            emit SettleFee(payment.sender, payment.amount, payment.recipient, 0);
         } else if (_ruling == RECIPIENT_WINS) {
             payable(payment.recipient).transfer(payment.amount);
+            emit SettleFee(payment.sender, 0, payment.recipient, payment.amount);
         } else {
             uint256 split_amount = payment.amount / 2;
             payable(payment.recipient).transfer(split_amount);
             payable(payment.sender).transfer(split_amount);
+            emit SettleFee(payment.sender, split_amount, payment.recipient, split_amount);
         }
 
         payment.amount = 0;
         payment.status = PaymentUtils.PaymentStatus.Executed;
+        
     }
 
     function refund(uint256 PaymentID) public whenNotPaused {
