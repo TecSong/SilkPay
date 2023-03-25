@@ -154,6 +154,17 @@ contract SilkPayV1 is Pausable {
         emit PayFinished(PaymentID, msg.sender, payment.recipient, amount);
     }
 
+    function _raiseDispute(PaymentUtils.Payment storage payment) internal returns (uint256) {
+        require(payment.status == PaymentUtils.PaymentStatus.Locking);
+        uint256 borderline = payment.startTime + payment.lockTime;
+        require(block.timestamp > borderline && block.timestamp <= (borderline + gracePeriod));
+
+        uint256 _arbitrationCost = arbitrator.getArbtrationFee(payment.amount);
+        require(msg.value >= _arbitrationCost, "arbitration fee is not enough");
+        uint256 dispute_id = arbitrator.createDispute{value: _arbitrationCost}(AMOUNT_OF_CHOICES);
+        return dispute_id;
+    } 
+
     /**
      * @dev called when sender specified the recipient
      * @param PaymentID payment id
@@ -161,14 +172,8 @@ contract SilkPayV1 is Pausable {
     function raiseDisputeByRecipient(uint256 PaymentID) public payable whenNotPaused returns (uint256 dispute_id) {
         PaymentUtils.Payment storage payment = payments[PaymentID];
         require(payment.targeted && msg.sender == payment.recipient);
-        require(payment.status == PaymentUtils.PaymentStatus.Locking);
-        uint256 borderline = payment.startTime + payment.lockTime;
-        require(block.timestamp > borderline && block.timestamp <= (borderline + gracePeriod));
 
-        uint256 _arbitrationCost = arbitrator.getArbtrationFee(payment.amount);
-        require(msg.value >= _arbitrationCost, "arbitration fee is not enough");
-        dispute_id = arbitrator.createDispute{value: _arbitrationCost}(AMOUNT_OF_CHOICES);
-
+        dispute_id = _raiseDispute(payment);
         disputeIDtoPaymentId[dispute_id] = PaymentID;
         emit Dispute(address(arbitrator), dispute_id, PaymentID);
     }
@@ -177,17 +182,14 @@ contract SilkPayV1 is Pausable {
      * @dev called when sender have not choosed recipient yet
      * @param PaymentID payment id
      */
-    function raiseDisputeByParticipant(uint256 PaymentID, bytes32[] memory proof) public payable whenNotPaused {
+    function raiseDisputeByParticipant(uint256 PaymentID, bytes32[] memory proof) public payable whenNotPaused returns (uint256 dispute_id){
         PaymentUtils.Payment storage payment = payments[PaymentID];
         require(!payment.targeted);
         require(verifyRecipient(PaymentID, proof, msg.sender));
-        require(payment.status == PaymentUtils.PaymentStatus.Locking);
-        uint256 borderline = payment.startTime + payment.lockTime;
-        require(block.timestamp > borderline && block.timestamp <= (borderline + gracePeriod));
 
-        //TODO
-        // arbitrab fee logic
-        // emit DisputeCreated();
+        dispute_id = _raiseDispute(payment);
+        disputeIDtoPaymentId[dispute_id] = PaymentID;
+        emit Dispute(address(arbitrator), dispute_id, PaymentID);
     }
 
     function onlyTargeted(PaymentUtils.Payment storage payment) internal view {

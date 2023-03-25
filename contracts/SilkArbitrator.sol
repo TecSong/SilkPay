@@ -102,7 +102,7 @@ contract SilkArbitrator is Arbitrator {
      *  @param _disputeID The ID of the dispute.
      *  @param _commit The commit.
      */
-    function Commit(uint _disputeID, bytes32 _commit) external onlyDuringPeriod(_disputeID, Period.commit) returns (uint voteID){
+    function commit(uint _disputeID, bytes32 _commit) external onlyDuringPeriod(_disputeID, Period.commit) returns (uint voteID){
         Dispute storage dispute = disputes[_disputeID];
         require(_commit != bytes32(0));
         for (uint i=0;i<dispute.votes.length;i++) {
