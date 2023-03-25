@@ -47,7 +47,7 @@ contract SilkPayV1 is Pausable {
 
     event RecipientSpecify(uint256 indexed PaymentID, address indexed recipient);
     event PayFinished(uint256 indexed PaymentID, address indexed sender, address indexed recipient, uint256 amount);
-    event ReFund(uint256 indexed PaymentID, address indexed sender, uint256 amount);
+    event Refund(uint256 indexed PaymentID, address indexed sender, uint256 amount);
     event Evidence(address indexed arbitrator, uint256 indexed PaymentID, address indexed submitter, string _evidence);
     event Dispute(address indexed arbitrator, uint256 indexed dispute_id, uint256 indexed PaymentID);
 
@@ -272,14 +272,15 @@ contract SilkPayV1 is Pausable {
         require(msg.sender == payment.sender);
         require(payment.status == PaymentUtils.PaymentStatus.Locking);
         uint256 borderline = payment.startTime + payment.lockTime;
+        // can only refund after the grace period ends
         require(block.timestamp > (borderline + gracePeriod));
 
         uint256 amount = payment.amount;
         payment.amount = 0;
-        payment.status = PaymentUtils.PaymentStatus.ReFund;
+        payment.status = PaymentUtils.PaymentStatus.Refund;
         payable(payment.sender).transfer(amount);
 
-        emit ReFund(PaymentID, msg.sender, amount);
+        emit Refund(PaymentID, msg.sender, amount);
 
     }
 

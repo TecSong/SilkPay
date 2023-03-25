@@ -6,7 +6,7 @@ contract PaymentUtils {
         Appealing, //During arbitration 仲裁中
         Executed,  //在申诉期，存在申诉，申诉被裁决及执行完成
         Paid,    // 没有仲裁时，正常支付完成
-        ReFund   //没有仲裁，资金退回支付方
+        Refund   //没有仲裁，资金退回支付方
     }
 
     enum PaymentType{
