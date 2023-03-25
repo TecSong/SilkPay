@@ -32,7 +32,6 @@ contract SilkArbitrator is Arbitrator {
         Period period; // The current period of the dispute.
         uint lastPeriodChange; // The last time the period was changed.
         Vote[] votes;        
-        uint totalFeesForJurors; //The total juror fees paid for current dispute.
         uint fees;              // The total amount of fees collected by the arbitrator.
         uint ruling;            // The current ruling.
         DisputeStatus status;   // The status of the dispute.
@@ -43,7 +42,7 @@ contract SilkArbitrator is Arbitrator {
     mapping(uint => VoteCounter) public DisputeId2VoteCounter;
 
     address public owner;
-    uint256[3] public timesPerPeriod;
+    uint256[4] public timesPerPeriod;
     uint16 public arbitrationFeeRatio;
     uint16 constant PERCENTAGE_BASE = 100;
     uint16 public MIN_ARBITRATION_FEE_RATIO = 5;
@@ -62,7 +61,6 @@ contract SilkArbitrator is Arbitrator {
         Dispute storage dispute = disputes[0];
         dispute.arbitrated = Arbitrable(msg.sender);
         dispute.period = Period.evidence;
-        dispute.votes[0].account = address(0);
         dispute.status = DisputeStatus.Waiting;
     }
 
@@ -92,21 +90,109 @@ contract SilkArbitrator is Arbitrator {
         dispute.arbitrated = Arbitrable(msg.sender);
         dispute.numberOfChoices = _numberOfChoices;
         dispute.period = Period.evidence;
+        dispute.fees = msg.value;
         dispute.lastPeriodChange = block.timestamp;
-        // As many votes that can be afforded by the provided funds.
-        // DisputeId2VoteCounter[dispute.voteCounters.length++].tied = true; // TODO
 
         emit DisputeCreation(disputeID, Arbitrable(msg.sender));
     }
 
+        /** @dev Sets the caller's choices for the specified vote.
+     *  @param _disputeID The ID of the dispute.
+     *  @param _voteID The ID of the vote.
+     *  @param _choice The choice.
+     *  @param _salt The salt for the commit if the votes were hidden.
+     */
+    function castVote(uint _disputeID, uint _voteID, uint _choice, uint _salt) external onlyDuringPeriod(_disputeID, Period.vote) {
+        Dispute storage dispute = disputes[_disputeID];
+        require(_voteID < dispute.votes.length);
+        require(_choice <= dispute.numberOfChoices && _choice > 0, "The choice has to be less than or equal to the number of choices for the dispute.");
+        require(dispute.votes[_voteID].account == msg.sender, "The caller has to own the vote.");
+        require(dispute.votes[_voteID].commit == keccak256(abi.encodePacked(_choice, _salt)), "The commit must match the choice");
+        require(!dispute.votes[_voteID].voted, "Vote already cast.");
+
+        // Save the votes.
+        dispute.votes[_voteID].choice = _choice;
+        dispute.votes[_voteID].voted = true;
+        
+
+        // Update voteCounter.
+        VoteCounter storage voteCounter = DisputeId2VoteCounter[_disputeID];
+        voteCounter.counts[_choice] += 1;
+
+        // update winningChoice
+        if (_choice == voteCounter.winningChoice) { // Voted for the winning choice.
+            if (voteCounter.tied) voteCounter.tied = false; // Potentially broke tie.
+        } else { // Voted for another choice.
+            if (voteCounter.counts[_choice] == voteCounter.counts[voteCounter.winningChoice]) { // Tie.
+                if (!voteCounter.tied) voteCounter.tied = true;
+            } else if (voteCounter.counts[_choice] > voteCounter.counts[voteCounter.winningChoice]) { // New winner.
+                voteCounter.winningChoice = _choice;
+                voteCounter.tied = false;
+            }
+        }
+    }
+
+    /** @dev Executes a specified dispute's ruling. UNTRUSTED.
+     *  @param _disputeID The ID of the dispute.
+     */
+    function executeRuling(uint _disputeID) external onlyDuringPeriod(_disputeID, Period.execution) {
+        Dispute storage dispute = disputes[_disputeID];
+        require(!dispute.ruled, "Ruling already executed.");
+        dispute.ruled = true;
+        VoteCounter storage vote_counter = DisputeId2VoteCounter[_disputeID];
+        uint winningChoice = vote_counter.tied ? 0 : vote_counter.winningChoice;
+        uint winningCount = vote_counter.counts[winningChoice];
+        dispute.arbitrated.rule(_disputeID, winningChoice);
+        settleArbitrationFee(dispute, winningCount, winningChoice);
+    }
+
+    /** @dev Settlement of arbitration fees to the winning juror.
+     *  @param dispute the dispute.
+     */
+    function settleArbitrationFee(Dispute storage dispute, uint winningCount, uint winningChoice) internal {
+        uint ArbitrationFee = dispute.fees;
+        uint voteNumber = dispute.votes.length;
+        uint splitFee = ArbitrationFee / winningCount;
+        for (uint j=0;j<voteNumber;j++) {
+            Vote storage vote = dispute.votes[j];
+            if (vote.voted && vote.choice == winningChoice) {
+                payable(vote.account).transfer(splitFee);
+            }
+        }
+    }
+
+    /** @dev Gets the current ruling of a specified dispute.
+     *  @param _disputeID The ID of the dispute.
+     *  @return ruling The current ruling.
+     */
     function currentRuling(uint _disputeID) public view override returns(uint ruling){
-        // TODO
+        require(_disputeID>0 && _disputeID <= disputes.length);
+        VoteCounter storage vote_counter = DisputeId2VoteCounter[_disputeID];
+        ruling = vote_counter.tied ? 0 : vote_counter.winningChoice;
     }
 
+    /** @dev Gets the status of a specified dispute.
+     *  @param _disputeID The ID of the dispute.
+     *  @return status The status.
+     */
     function disputeStatus(uint _disputeID) public view override returns(DisputeStatus status) {
-        // TODO
+        Dispute storage dispute = disputes[_disputeID];
+        if (dispute.period < Period.vote) status = DisputeStatus.Waiting;
+        else if (dispute.period < Period.execution) status = DisputeStatus.Arbitration;
+        else status = DisputeStatus.Solved;
     }
 
+    function getVotedCount(uint _disputeID) public view returns (uint) {
+        Dispute storage dispute = disputes[_disputeID];
+        uint voted_count = 0;
+        for (uint j=0;j<dispute.votes.length;j++) {
+            Vote storage vote = dispute.votes[j];
+            if (vote.voted) {
+                voted_count++;
+            }
+        }
+        return voted_count;
+    }
 
     /** @dev Passes the period of a specified dispute.
      *  @param _disputeID The ID of the dispute.
@@ -120,12 +206,15 @@ contract SilkArbitrator is Arbitrator {
             );
             dispute.period = Period.commit;
         } else if (dispute.period == Period.commit) {
+            require(dispute.votes.length >= MIN_VOTES, "The minimum number of votes has not been met");
             require(
                 block.timestamp - dispute.lastPeriodChange >= timesPerPeriod[uint(dispute.period)],
                 "The commit period time has not passed yet and not every juror has committed yet."
             );
             dispute.period = Period.vote;
         } else if (dispute.period == Period.vote) {
+            uint votedCount = getVotedCount(_disputeID);
+            require(votedCount >= MIN_VOTES, "The minimum number of voted votes has not been met");
             require(
                 block.timestamp - dispute.lastPeriodChange >= timesPerPeriod[uint(dispute.period)],
                 "The vote period time has not passed yet and not every juror has voted yet."

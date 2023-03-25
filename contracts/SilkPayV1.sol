@@ -246,8 +246,6 @@ contract SilkPayV1 is Pausable {
         uint256 PaymentId = disputeIDtoPaymentId[_disputeId];
         PaymentUtils.Payment storage payment = payments[PaymentId];
 
-        // 需要在裁决阶段才能裁决 TODO
-        // 仲裁费用需要结算 TODO
         settleFee(payment, _ruling);
     }
 

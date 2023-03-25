@@ -12,7 +12,7 @@ import "./Arbitrable.sol";
  */
 abstract contract Arbitrator {
 
-    enum DisputeStatus {Waiting, Appealable, Solved}
+    enum DisputeStatus {Waiting, Arbitration, Solved}
 
     /** @dev To be raised when a dispute is created.
      *  @param _disputeID ID of the dispute.
