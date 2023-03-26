@@ -1,4 +1,6 @@
 require("@nomicfoundation/hardhat-toolbox");
+const dotenv = require("dotenv");
+dotenv.config()
 
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
 const INFURA_API_KEY = process.env.INFURA_API_KEY;
@@ -31,14 +33,15 @@ module.exports = {
       gasPrice: 1000000000,
       accounts: [PRIVATE_KEY],
     },
-    optestnet: {
-      url: "https://goerli.optimism.io",
-      gasPrice: 1000000000,
+    Bedrock: {
+      // url: "https://goerli.optimism.io",
+      url: "https://opt-goerli.g.alchemy.com/v2/Bk4OmvluXtb3I_gKd26FlJAff1e9brf8",
+      // gasPrice: 1000000000,
       accounts: [PRIVATE_KEY],
     },
     zkEVM: {
       url: "https://rpc.public.zkevm-test.net",
-      gasPrice: 1000000000,
+      // gasPrice: 1000000000,
       accounts: [PRIVATE_KEY],
     },
     mantle: {
@@ -69,6 +72,13 @@ module.exports = {
           //apiURL: "https://blockscout.com/xdai/mainnet/api",
           //browserURL: "https://blockscout.com/xdai/mainnet",
         },
+      },
+      {
+        network: "Bedrock",
+        urls: {
+          apiURL: "",
+          browserURL: "https://goerli-optimism.etherscan.io/",
+        }
       },
     ],
     apiKey: {
