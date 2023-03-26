@@ -18,6 +18,9 @@
     SilkArbitrator 0xAd8efd46bE9E93dbB4B416FcDDE022fD11a61016
     SilkPayV1 0x105F08898ec90e55d8f9C05EAfE5DA44180fB136
 
+  - zkEVM (polygon testnet):
+    SilkArbitrator 0xad8efd46be9e93dbb4b416fcdde022fd11a61016
+    SilkPayV1 0x105f08898ec90e55d8f9c05eafe5da44180fb136
 
 # Project Description
 An arbitrable payment protocol on L2
@@ -49,27 +52,6 @@ SilkPay is a payment protocol on L2, which aims to solve problems in various pay
 # Functions completed during hackathon delivery
 - [ ] **Complete the logic of pre-payment**
 - [ ] **Complete the logic of the arbitration mechanism**
-
-# Smart Contract Deploy:
-  - scroll alpha testnet:
-    SilkArbitrator 0x5E62274484F958D0205E214dF5CBDb19964Ed5B3 
-    SilkPayV1 0xdcb76B4C1C03c26A9f25409e73aA1969eE1800A4
-
-  - chiado (gnosis testnet)：
-    SilkArbitrator 0xAd8efd46bE9E93dbB4B416FcDDE022fD11a61016
-    SilkPayV1 0x105F08898ec90e55d8f9C05EAfE5DA44180fB136
-
-  - Bedrock (OP testnet):
-    SilkArbitrator 0xa70225Cb7f1B9d73cd09920fAf4ed76d150bF762
-    SilkPayV1 0x0dc627cB3bB1319007A5500259e8A16e672d8328
-
-  - sepolia (taiko testnet):
-    SilkArbitrator 0xAd8efd46bE9E93dbB4B416FcDDE022fD11a61016
-    SilkPayV1 0x105F08898ec90e55d8f9C05EAfE5DA44180fB136
-    
-  - zkEVM (polygon testnet):
-    SilkArbitrator 0xad8efd46be9e93dbb4b416fcdde022fd11a61016
-    SilkPayV1 0x105f08898ec90e55d8f9c05eafe5da44180fb136
     
 # Further Improvements
 - [ ] **Implement the logic for spliting bills**
