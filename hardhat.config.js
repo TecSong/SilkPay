@@ -35,7 +35,7 @@ module.exports = {
     },
     Bedrock: {
       // url: "https://goerli.optimism.io",
-      url: "https://opt-goerli.g.alchemy.com/v2/Bk4OmvluXtb3I_gKd26FlJAff1e9brf8",
+      url: `https://opt-goerli.g.alchemy.com/v2/${INFURA_API_KEY}`,
       // gasPrice: 1000000000,
       accounts: [PRIVATE_KEY],
     },
