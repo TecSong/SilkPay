@@ -17,12 +17,12 @@ module.exports = {
     },
     scrollAlpha: {
       url: "https://alpha-rpc.scroll.io/l2" || "",
-      accounts:
-        process.env.PRIVATE_KEY !== undefined
-          ? [process.env.PRIVATE_KEY]
-          : [PRIVATE_KEY],
-      gas: 2100000,
-      gasPrice: 8000000000,
+      accounts: [PRIVATE_KEY],
+      //   process.env.PRIVATE_KEY !== undefined
+      //     ? [process.env.PRIVATE_KEY]
+      //     : [PRIVATE_KEY],
+      // gas: 2100000,
+      // gasPrice: 8000000000,
     },
     gnosis: {
       url: "https://rpc.gnosischain.com",
@@ -40,8 +40,9 @@ module.exports = {
       accounts: [PRIVATE_KEY],
     },
     zkEVM: {
-      url: "https://rpc.public.zkevm-test.net",
-      // gasPrice: 1000000000,
+      url: `https://rpc.public.zkevm-test.net`,
+      // url: `https://polygon-zkevm-testnet.rpc.thirdweb.com`,
+      // gasPrice: 10000000000,
       accounts: [PRIVATE_KEY],
     },
     mantle: {

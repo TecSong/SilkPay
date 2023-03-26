@@ -177,6 +177,7 @@ contract SilkPayV1 is Pausable {
 
         dispute_id = _raiseDispute(payment);
         disputeIDtoPaymentId[dispute_id] = PaymentID;
+        PaymentIdtoDisputeId[PaymentID] = dispute_id;
         emit Dispute(address(arbitrator), dispute_id, PaymentID);
     }
 
@@ -191,6 +192,7 @@ contract SilkPayV1 is Pausable {
 
         dispute_id = _raiseDispute(payment);
         disputeIDtoPaymentId[dispute_id] = PaymentID;
+        PaymentIdtoDisputeId[PaymentID] = dispute_id;
         emit Dispute(address(arbitrator), dispute_id, PaymentID);
     }
 

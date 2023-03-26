@@ -3,8 +3,8 @@
 - Front-end code repository: https://github.com/beyond009/Silkpay
 - smart contract deploy:
   - scroll alpha testnet:
-    SilkArbitrator 0x5E62274484F958D0205E214dF5CBDb19964Ed5B3 
-    SilkPayV1 0xdcb76B4C1C03c26A9f25409e73aA1969eE1800A4
+    SilkArbitrator 0xFe22947b9234d1e8294A9B147E959543D0e2A483 
+    SilkPayV1 0x4B62466d0A6cC59c65b6C93917AD9D30de259266
 
   - chiado (gnosis testnet)：
     SilkArbitrator 0xAd8efd46bE9E93dbB4B416FcDDE022fD11a61016
