@@ -7,19 +7,20 @@
 const hre = require("hardhat");
 
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const ONE_YEAR_IN_SECS = 365 * 24 * 60 * 60;
-  const unlockTime = currentTimestampInSeconds + ONE_YEAR_IN_SECS;
+  // const currentTimestampInSeconds = Math.round(Date.now() / 1000);
+  // const ONE_YEAR_IN_SECS = 365 * 24 * 60 * 60;
+  const _arbitrator = '0xAd8efd46bE9E93dbB4B416FcDDE022fD11a61016';
+  const _gracePeriod = 300;
 
-  const lockedAmount = hre.ethers.utils.parseEther("1");
+  // const lockedAmount = hre.ethers.utils.parseEther("0.0001");
 
-  const Lock = await hre.ethers.getContractFactory("SilkPayV1");
-  const lock = await Lock.deploy(unlockTime, { value: lockedAmount });
+  const SilkPayV1 = await hre.ethers.getContractFactory("SilkPayV1");
+  const SILKPAYV1 = await SilkPayV1.deploy(_arbitrator, _gracePeriod);
 
-  await lock.deployed();
+  await SILKPAYV1.deployed();
 
   console.log(
-    `Lock with 1 ETH and unlock timestamp ${unlockTime} deployed to ${lock.address}`
+    `SilkPayV1 deployed to ${SILKPAYV1.address}`
   );
 }
 

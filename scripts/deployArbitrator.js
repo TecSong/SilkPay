@@ -2,7 +2,7 @@ const hre = require("hardhat");
 
 async function main() {
   const Arbitrator = await hre.ethers.getContractFactory("SilkArbitrator");
-  const arbitrator = await Arbitrator.deploy(15, [1,2,3]);
+  const arbitrator = await Arbitrator.deploy(15, [10,10,10,10]);
 
   await arbitrator.deployed();
 

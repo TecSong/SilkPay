@@ -1,6 +1,6 @@
 require("@nomicfoundation/hardhat-toolbox");
 
-const PRIVATE_KEY = process.env.PRIVATE_KEY || "0083490dee5291a22645800449e18accda14210b3bdfd35fdde2d1698825b1db";
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
 const INFURA_API_KEY = process.env.INFURA_API_KEY;
 
 /** @type import('hardhat/config').HardhatUserConfig */
@@ -8,7 +8,7 @@ module.exports = {
   solidity: "0.8.7",
   networks: {
     sepolia: {
-      url: `https://sepolia.infura.io/v3/${INFURA_API_KEY}`,
+      url: "https://rpc.sepolia.org",
       accounts: [PRIVATE_KEY],
       gas: 2100000,
       gasPrice: 8000000000,
@@ -31,10 +31,20 @@ module.exports = {
       gasPrice: 1000000000,
       accounts: [PRIVATE_KEY],
     },
-    zkEVM: {
-      url: `https://rpc.public.zkevm-test.net`,
+    optestnet: {
+      url: "https://goerli.optimism.io",
+      gasPrice: 1000000000,
       accounts: [PRIVATE_KEY],
     },
+    zkEVM: {
+      url: "https://rpc.public.zkevm-test.net",
+      gasPrice: 1000000000,
+      accounts: [PRIVATE_KEY],
+    },
+    mantle: {
+      url: "https://rpc.testnet.mantle.xyz/",
+      accounts: [PRIVATE_KEY] // Uses the private key from the .env file
+    }
   },
   etherscan: {
     customChains: [
