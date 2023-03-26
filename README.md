@@ -1,8 +1,7 @@
 # Basic Information
 - Project name：SilkPay
 - Front-end code repository: https://github.com/beyond009/Silkpay
-- SilkPay is available on multiple L2 chains, including 
-    **OPtimism, Genosis, Scroll, Polygon, etc.
+- SilkPay is available on multiple L2 chains, including **OPtimism, Genosis, Scroll, Polygon, Taiko**, etc.
 
 # Project Description
 An arbitrable payment protocol on L2
