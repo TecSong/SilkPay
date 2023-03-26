@@ -30,13 +30,13 @@ SilkPay is a payment protocol on L2, which aims to solve problems in various pay
 - and so on
 
 # Functions completed during hackathon delivery
-- [ ] **Complete the logic of prepayment**
+- [ ] **Complete the logic of pre-payment**
 - [ ] **Complete the logic of the arbitration mechanism**
 
 # Further Improvements
-- [ ] **Implement the logic of splitBill**
-- [ ] **Support batch payment and ERC20 token payment**
-- [ ] **Use zk technology to protect the privacy of payment and arbitration**
+- [ ] **Implement the logic for spliting bills**
+- [ ] **Support batch payment and more ERC20 token payment**
+- [ ] **Use ZK technology to protect the privacy of payment and arbitration**
 
 # See More
 - video demo: 
