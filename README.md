@@ -51,6 +51,10 @@ SilkPay is a payment protocol on L2, which aims to solve problems in various pay
     SilkArbitrator 0xAd8efd46bE9E93dbB4B416FcDDE022fD11a61016
     SilkPayV1 0x105F08898ec90e55d8f9C05EAfE5DA44180fB136
     
+  - zkEVM (polygon testnet):
+    SilkArbitrator 0xad8efd46be9e93dbb4b416fcdde022fd11a61016
+    SilkPayV1 0x105f08898ec90e55d8f9c05eafe5da44180fb136
+    
 # Further Improvements
 - [ ] **Implement the logic for spliting bills**
 - [ ] **Support batch payment and more ERC20 token payment**
