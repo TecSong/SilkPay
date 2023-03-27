@@ -21,6 +21,10 @@
   - zkEVM (polygon testnet):
     SilkArbitrator 0xad8efd46be9e93dbb4b416fcdde022fd11a61016
     SilkPayV1 0x105f08898ec90e55d8f9c05eafe5da44180fb136
+  
+  - mantle testnet:
+    SilkArbitrator 0x809e2c3C7ac9e5D8D1499f41644200d11780497a
+    SilkPayV1 0xaB3ed5B7ba4f8ef1972a8b1b167C46e8ae5E82e0
 
 # Project Description
 An arbitrable payment protocol on L2
