@@ -9,7 +9,7 @@ const hre = require("hardhat");
 async function main() {
   // const currentTimestampInSeconds = Math.round(Date.now() / 1000);
   // const ONE_YEAR_IN_SECS = 365 * 24 * 60 * 60;
-  const _arbitrator = '0x809e2c3C7ac9e5D8D1499f41644200d11780497a';
+  const _arbitrator = '0x47D7F6B196a58e08B70cfc7066901faca9863e52';
   const _gracePeriod = 300;
 
   // const lockedAmount = hre.ethers.utils.parseEther("0.0001");

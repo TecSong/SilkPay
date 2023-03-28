@@ -219,6 +219,11 @@ contract SilkArbitrator is Arbitrator {
         return voted_count;
     }
 
+    function getVotes(uint _dispute_id) public view returns (Vote[] memory) {
+         Dispute storage dispute = disputes[_dispute_id];
+         return dispute.votes;
+    }
+
     /** @dev Passes the period of a specified dispute.
      *  @param _disputeID The ID of the dispute.
      */
