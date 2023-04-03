@@ -63,5 +63,5 @@ SilkPay is a payment protocol on L2, which aims to solve problems in various pay
 - [ ] **Use ZK technology to protect the privacy of payment and arbitration**
 
 # See More
-- video demo: 
+- video demo: https://ethglobal.com/showcase/silkpay-67byt
 - project deck:
