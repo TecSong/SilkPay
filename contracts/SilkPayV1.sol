@@ -420,32 +420,67 @@ contract SilkPayV1 is Pausable {
         uint256 _ruling
     ) internal {
         require(_ruling == SENDER_WINS || _ruling == RECIPIENT_WINS);
-        if (_ruling == SENDER_WINS) {
-            payable(payment.sender).transfer(payment.amount);
-            emit SettleFee(
-                payment.sender,
-                payment.amount,
-                payment.recipient,
-                0
-            );
-        } else if (_ruling == RECIPIENT_WINS) {
-            payable(payment.recipient).transfer(payment.amount);
-            emit SettleFee(
-                payment.sender,
-                0,
-                payment.recipient,
-                payment.amount
-            );
+        if (payment.paymentToken == address(0)) {
+            if (_ruling == SENDER_WINS) {
+                payable(payment.sender).transfer(payment.amount);
+                emit SettleFee(
+                    payment.sender,
+                    payment.amount,
+                    payment.recipient,
+                    0
+                );
+            } else if (_ruling == RECIPIENT_WINS) {
+                payable(payment.recipient).transfer(payment.amount);
+                emit SettleFee(
+                    payment.sender,
+                    0,
+                    payment.recipient,
+                    payment.amount
+                );
+            } else {
+                uint256 split_amount = payment.amount / 2;
+                payable(payment.recipient).transfer(split_amount);
+                payable(payment.sender).transfer(split_amount);
+                emit SettleFee(
+                    payment.sender,
+                    split_amount,
+                    payment.recipient,
+                    split_amount
+                );
+            }
         } else {
-            uint256 split_amount = payment.amount / 2;
-            payable(payment.recipient).transfer(split_amount);
-            payable(payment.sender).transfer(split_amount);
-            emit SettleFee(
-                payment.sender,
-                split_amount,
-                payment.recipient,
-                split_amount
-            );
+            IERC20 erc20Contract = IERC20(payment.paymentToken);
+            if (_ruling == SENDER_WINS) {
+                require(erc20Contract.transfer(payment.sender, payment.amount));
+                emit SettleFee(
+                    payment.sender,
+                    payment.amount,
+                    payment.recipient,
+                    0
+                );
+            } else if (_ruling == RECIPIENT_WINS) {
+                require(
+                    erc20Contract.transfer(payment.recipient, payment.amount)
+                );
+                emit SettleFee(
+                    payment.sender,
+                    0,
+                    payment.recipient,
+                    payment.amount
+                );
+            } else {
+                uint256 split_amount = payment.amount / 2;
+                require(
+                    erc20Contract.transfer(payment.recipient, split_amount)
+                );
+                require(erc20Contract.transfer(payment.sender, split_amount));
+                emit SettleFee(
+                    payment.sender,
+                    split_amount,
+                    payment.recipient,
+                    split_amount
+                );
+            }
         }
 
         payment.amount = 0;
@@ -466,7 +501,12 @@ contract SilkPayV1 is Pausable {
         uint256 amount = payment.amount;
         payment.amount = 0;
         payment.status = PaymentUtils.PaymentStatus.Refund;
-        payable(payment.sender).transfer(amount);
+        if (payment.paymentToken == address(0)) {
+            payable(payment.sender).transfer(amount);
+        } else {
+            IERC20 erc20Contract = IERC20(payment.paymentToken);
+            require(erc20Contract.transfer(payment.sender, amount));
+        }
 
         emit Refund(PaymentID, msg.sender, amount);
     }
