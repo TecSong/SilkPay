@@ -37,6 +37,20 @@ contract SilkPayV1 is Pausable {
     mapping(uint256 => uint256) public disputeIDtoPaymentId;
     mapping(uint256 => uint256) public PaymentIdtoDisputeId;
 
+    enum BillStatus {
+        unpaid,
+        paid
+    }
+
+    struct splitBill {
+        uint256 total_amount;
+        address[] payees;
+        uint256[] shares;
+        BillStatus status;
+
+    }
+    mapping(uint256 => splitBill) public paymentBillMap;
+
     event PaymentCreated(
         uint256 indexed PaymentID,
         address indexed sender,
@@ -78,6 +92,11 @@ contract SilkPayV1 is Pausable {
         uint senderFee,
         address recipient,
         uint recipientFee
+    );
+    event OpenSplitBill(
+        uint payment_id,
+        address recipient,
+        uint amount
     );
 
     constructor(Arbitrator _arbitrator, uint256 _gracePeriod) {
@@ -251,11 +270,17 @@ contract SilkPayV1 is Pausable {
         uint256 amount = payment.amount;
         payment.status = PaymentUtils.PaymentStatus.Paid;
         payment.amount = 0;
-        if (payment.paymentToken != address(0)) {
-            IERC20 erc20Contract = IERC20(payment.paymentToken);
-            require(erc20Contract.transfer(payment.recipient, amount));
+
+        splitBill storage _splitBill = paymentBillMap[PaymentID];
+        if (_splitBill.total_amount > 0) {
+            released(payment, _splitBill);
         } else {
-            payable(payment.recipient).transfer(amount);
+            if (payment.paymentToken != address(0)) {
+                IERC20 erc20Contract = IERC20(payment.paymentToken);
+                require(erc20Contract.transfer(payment.recipient, amount));
+            } else {
+                payable(payment.recipient).transfer(amount);
+            }
         }
 
         emit PayFinished(PaymentID, msg.sender, payment.recipient, amount);
@@ -405,82 +430,64 @@ contract SilkPayV1 is Pausable {
             "The caller must be the arbitrator."
         );
         uint256 PaymentId = disputeIDtoPaymentId[_disputeId];
-        PaymentUtils.Payment storage payment = payments[PaymentId];
 
-        settleFee(payment, _ruling);
+        settleFee(PaymentId, _ruling);
     }
 
     /**
      * @dev settle payment fee after ruling
-     * @param payment the payment
+     * @param payment_id the payment id
      * @param _ruling the ruling of disupte
      */
     function settleFee(
-        PaymentUtils.Payment storage payment,
+        uint256 payment_id,
         uint256 _ruling
     ) internal {
-        require(_ruling == SENDER_WINS || _ruling == RECIPIENT_WINS);
-        if (payment.paymentToken == address(0)) {
-            if (_ruling == SENDER_WINS) {
-                payable(payment.sender).transfer(payment.amount);
-                emit SettleFee(
-                    payment.sender,
-                    payment.amount,
-                    payment.recipient,
-                    0
-                );
-            } else if (_ruling == RECIPIENT_WINS) {
-                payable(payment.recipient).transfer(payment.amount);
-                emit SettleFee(
-                    payment.sender,
-                    0,
-                    payment.recipient,
-                    payment.amount
-                );
+        PaymentUtils.Payment storage payment = payments[payment_id];
+        splitBill storage _splitBill = paymentBillMap[payment_id];
+        bool haveSplitBill = _splitBill.total_amount > 0;
+
+        if (_ruling == SENDER_WINS) {
+            ethOrErc20Transfer(payment, payment.sender, payment.amount);
+            emit SettleFee(
+                payment.sender,
+                payment.amount,
+                payment.recipient,
+                0
+            );
+        } else if (_ruling == RECIPIENT_WINS) {
+            // payable(payment.recipient).transfer(payment.amount);
+            if (haveSplitBill) {
+                released(payment, _splitBill);
             } else {
-                uint256 split_amount = payment.amount / 2;
-                payable(payment.recipient).transfer(split_amount);
-                payable(payment.sender).transfer(split_amount);
-                emit SettleFee(
-                    payment.sender,
-                    split_amount,
-                    payment.recipient,
-                    split_amount
-                );
+                ethOrErc20Transfer(payment, payment.recipient, payment.amount);
             }
+
+            emit SettleFee(
+                payment.sender,
+                0,
+                payment.recipient,
+                payment.amount
+            );
         } else {
-            IERC20 erc20Contract = IERC20(payment.paymentToken);
-            if (_ruling == SENDER_WINS) {
-                require(erc20Contract.transfer(payment.sender, payment.amount));
-                emit SettleFee(
-                    payment.sender,
-                    payment.amount,
-                    payment.recipient,
-                    0
-                );
-            } else if (_ruling == RECIPIENT_WINS) {
-                require(
-                    erc20Contract.transfer(payment.recipient, payment.amount)
-                );
-                emit SettleFee(
-                    payment.sender,
-                    0,
-                    payment.recipient,
-                    payment.amount
-                );
+            uint256 split_amount = payment.amount / 2;
+            if (haveSplitBill) {
+                payment.amount = split_amount;
+                released(payment, _splitBill);
+                payment.amount = split_amount * 2;
             } else {
-                uint256 split_amount = payment.amount / 2;
-                require(
-                    erc20Contract.transfer(payment.recipient, split_amount)
-                );
-                require(erc20Contract.transfer(payment.sender, split_amount));
-                emit SettleFee(
-                    payment.sender,
-                    split_amount,
-                    payment.recipient,
-                    split_amount
-                );
+                ethOrErc20Transfer(payment, payment.recipient, split_amount);
+                ethOrErc20Transfer(payment, payment.sender, split_amount);
             }
+            // payable(payment.recipient).transfer(split_amount);
+            // payable(payment.sender).transfer(split_amount);
+
+            emit SettleFee(
+                payment.sender,
+                split_amount,
+                payment.recipient,
+                split_amount
+            );
         }
 
         payment.amount = 0;
@@ -510,6 +517,64 @@ contract SilkPayV1 is Pausable {
 
         emit Refund(PaymentID, msg.sender, amount);
     }
+
+    function openSplitBill(uint256 PaymentID, address[] memory _payees, uint256[] memory _shares) external {
+        PaymentUtils.Payment storage payment = payments[PaymentID];
+        require(payment.status == PaymentUtils.PaymentStatus.Locking);
+        onlyTargeted(payment);
+        onlyRecipient(payment);
+
+        require(_payees.length == _shares.length);
+        uint256 total;
+        for (uint i = 0; i < _shares.length; i++) {
+            require(_shares[i] > 0 && _shares[i] < 100);
+            total += _shares[i];
+        }
+        require(total == 100);
+
+        paymentBillMap[PaymentID] = splitBill(
+            payment.amount,
+            _payees,
+            _shares,
+            BillStatus.unpaid
+        );
+
+        emit OpenSplitBill(PaymentID, msg.sender, payment.amount);
+
+    }
+
+    function ethOrErc20Transfer(PaymentUtils.Payment storage payment, address recepient, uint _amount) internal {
+        bool isERC20 = payment.paymentToken != address(0);
+        IERC20 erc20Contract;
+        if (isERC20) erc20Contract = IERC20(payment.paymentToken);
+
+        if (isERC20) {
+            require(erc20Contract.transfer(recepient, _amount));
+        } else {
+            payable(recepient).transfer(_amount);
+        }
+    }
+
+
+    function released(PaymentUtils.Payment storage payment, splitBill storage _splitBill) internal {
+        require(_splitBill.status == BillStatus.unpaid);
+
+        bool isERC20 = payment.paymentToken != address(0);
+        IERC20 erc20Contract;
+        if (isERC20) erc20Contract = IERC20(payment.paymentToken);
+
+        for (uint i = 0; i < _splitBill.payees.length; i++) {
+            uint _amount = payment.amount * _splitBill.shares[i] / 100;
+
+            if (isERC20) {
+                require(erc20Contract.transfer(payment.recipient, _amount));
+            } else {
+                payable(payment.recipient).transfer(_amount);
+            }
+        }
+
+        _splitBill.status = BillStatus.paid;
+    } 
 
     function getPaymentIDsBySender(
         address _sender
