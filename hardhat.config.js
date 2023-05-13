@@ -1,6 +1,6 @@
 require("@nomicfoundation/hardhat-toolbox");
 const dotenv = require("dotenv");
-dotenv.config()
+dotenv.config();
 
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
 const INFURA_API_KEY = process.env.INFURA_API_KEY;
@@ -8,7 +8,13 @@ const INFURA_API_KEY = process.env.INFURA_API_KEY;
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   solidity: "0.8.7",
+  defaultNetwork: "bsctestnet",
   networks: {
+    bsctestnet: {
+      url: "https://data-seed-prebsc-1-s1.binance.org:8545",
+      chainId: 97,
+      accounts: [PRIVATE_KEY],
+    },
     sepolia: {
       url: "https://rpc.sepolia.org",
       accounts: [PRIVATE_KEY],
@@ -47,8 +53,8 @@ module.exports = {
     },
     mantle: {
       url: "https://rpc.testnet.mantle.xyz/",
-      accounts: [PRIVATE_KEY] // Uses the private key from the .env file
-    }
+      accounts: [PRIVATE_KEY], // Uses the private key from the .env file
+    },
   },
   etherscan: {
     customChains: [
@@ -79,7 +85,7 @@ module.exports = {
         urls: {
           apiURL: "",
           browserURL: "https://goerli-optimism.etherscan.io/",
-        }
+        },
       },
     ],
     apiKey: {
