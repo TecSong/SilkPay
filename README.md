@@ -43,5 +43,5 @@ SilkPay is a payment protocol, which aims to solve problems in various payment s
 
 # See More
 
-- video demo:
+- video demo: [here](high.mp4)
 - project deck:
