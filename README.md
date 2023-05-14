@@ -3,7 +3,7 @@
 - Project name：SilkPay
 - Front-end code repository: https://github.com/beyond009/Silkpay
 - smart contract deploy:
-  - bsc chain: 0x03065c887fEE8e392Ade23D4d8E5e2feE07b47A7
+  - bsc chain: 0x9B32575506321b5c2d68bdA2Dc0F29b56DE0c387
 
 # Project Description
 
