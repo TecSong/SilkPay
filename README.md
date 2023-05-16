@@ -34,10 +34,9 @@ SilkPay is a payment protocol, which aims to solve problems in various payment s
 - [ ] **Complete the logic of pre-payment**
 - [ ] **Complete the logic of the arbitration mechanism**
 - [ ] **suport ERC20 token payment**
+- [ ] **Implement the logic for spliting bills**
 
 # Further Improvements
-
-- [ ] **Implement the logic for spliting bills**
 - [ ] **Support batch payment**
 - [ ] **Use ZK technology to protect the privacy of payment and arbitration**
 
